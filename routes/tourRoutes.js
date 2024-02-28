@@ -1,30 +1,23 @@
-import express from "express";
+import express from 'express';
 import {
   getAllTours,
   getTour,
   createTour,
   updateTour,
   deleteTour,
-  getID,
-} from "../controllers/tourController.js";
+  aliasTopTours,
+  getTourStats,
+  getMonthlyPlan,
+} from '../controllers/tourController.js';
 
 const router = express.Router();
 
-router.param("id", getID);
+// router.param("id", getID);
+router.route('/tour-stats').get(getTourStats);
+router.route('/monthly-plan/:year').get(getMonthlyPlan);
 
-function checkBody(req, res, next) {
-  const { name, price } = req.body;
-  if (!name || !price) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Bad request (request body required)",
-    });
-  }
-
-  next();
-}
-
-router.route("/").get(getAllTours).post(createTour);
-router.route("/:id").get(getTour).patch(updateTour).delete(deleteTour);
+router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
+router.route('/').get(getAllTours).post(createTour);
+router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 
 export default router;
