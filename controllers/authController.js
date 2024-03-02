@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import crypto from 'crypto';
 
 import User from '../models/userModel.js';
 import catchAsync from '../utils/catchAsync.js';
@@ -63,7 +64,7 @@ export const protect = catchAsync(async (req, res, next) => {
 
   if (!token) {
     return next(
-      new AppError("You're not logged in. Login to access the tours")
+      new AppError("You're not logged in. Login to perform this task")
     );
   }
 
@@ -139,4 +140,57 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
-export const resetPassword = (req, res, next) => {};
+
+export const resetPassword = catchAsync(async (req, res, next) => {
+  if (!req.body.password || !req.body.passwordConfirm) {
+    return next(
+      new AppError('Password and Password Confirm fields are required', 400)
+    );
+  }
+  // 1) Get user based on token
+  const resetToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: resetToken,
+    resetTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Invalid token or token expired', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.resetTokenExpires = undefined;
+  await user.save();
+
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+
+export const updatePassword = catchAsync(async (req, res, next) => {
+  const { currentPassword, newPassword, newPasswordConfirm } = req.body;
+
+  const user = await User.findById(req.user._id).select('+password');
+
+  if (!(await user.correctPassword(currentPassword, user.password))) {
+    return next(new AppError('Your current password is wrong'));
+  }
+
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirm;
+  await user.save();
+
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});

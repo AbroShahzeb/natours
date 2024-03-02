@@ -3,7 +3,7 @@ dotenv.config();
 import mongoose from 'mongoose';
 
 process.on('uncaughtException', (err) => {
-  console.Console.log('UNCAUGHT EXCEPTION! Shutting down...');
+  console.log('UNCAUGHT EXCEPTION! Shutting down...');
   console.log(err.name, err.message);
   process.exit(1);
 });
