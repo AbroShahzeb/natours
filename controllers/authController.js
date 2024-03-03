@@ -7,10 +7,18 @@ import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
 import sendMail from '../utils/email.js';
 
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const signToken = (id, res) => {
+  const token = jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+
+  res.cookie('jwt', token, {
+    expiresIn: 90 * 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'development' ? false : true,
+    httpOnly: true,
+  });
+
+  return token;
 };
 
 export const signup = catchAsync(async (req, res, next) => {
@@ -21,7 +29,7 @@ export const signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
 
-  const token = signToken(newUser._id);
+  const token = signToken(newUser._id, res);
 
   res.status(201).json({
     status: 'success',
@@ -45,7 +53,7 @@ export const login = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid email or password', 401));
   }
 
-  const token = signToken(user._id);
+  const token = signToken(user._id, res);
 
   res.status(200).json({
     status: 'success',
@@ -168,7 +176,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   user.resetTokenExpires = undefined;
   await user.save();
 
-  const token = signToken(user._id);
+  const token = signToken(user._id, res);
   res.status(200).json({
     status: 'success',
     token,
@@ -188,7 +196,7 @@ export const updatePassword = catchAsync(async (req, res, next) => {
   user.passwordConfirm = newPasswordConfirm;
   await user.save();
 
-  const token = signToken(user._id);
+  const token = signToken(user._id, res);
   res.status(200).json({
     status: 'success',
     token,
