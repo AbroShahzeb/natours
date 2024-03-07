@@ -1,6 +1,7 @@
 import User from '../models/userModel.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/appError.js';
+import { deleteOne, updateOne, getOne, getAll } from './factoryHandler.js';
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -46,37 +47,18 @@ export const deleteMe = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      users,
-    },
-  });
-});
-export const getUser = (req, res) => {
-  res.status(500).json({
-    status: 'fail',
-    message: 'This endpoint not have been implemented yet.',
-  });
+export const getMe = (req, res, next) => {
+  req.params.id = req.user._id;
+  next();
 };
+
+export const getAllUsers = getAll(User);
+export const getUser = getOne(User);
 export const createUser = (req, res) => {
   res.status(500).json({
     status: 'fail',
-    message: 'This endpoint not have been implemented yet.',
+    message: 'This route is not defined, please use /signup route',
   });
 };
-export const updateUser = (req, res) => {
-  res.status(500).json({
-    status: 'fail',
-    message: 'This endpoint not have been implemented yet.',
-  });
-};
-export const deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'fail',
-    message: 'This endpoint not have been implemented yet.',
-  });
-};
+export const updateUser = updateOne(User);
+export const deleteUser = deleteOne(User);

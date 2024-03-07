@@ -8,6 +8,7 @@ import hpp from 'hpp';
 
 import userRoutes from './routes/userRoutes.js';
 import tourRoutes from './routes/tourRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 
 import AppError from './utils/appError.js';
 import GlobalErrorHandler from './controllers/errorController.js';
@@ -44,6 +45,7 @@ app.use(morgan('dev'));
 
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/tour', tourRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on the server!`, 404));
